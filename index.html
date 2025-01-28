@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <!-- Correct script URL -->
+    <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <h1>QR Code Scanner</h1>
+    <div id="reader" style="width: 300px; height: 300px; border: 1px solid #ccc; margin-bottom: 20px;"></div>
+    <button onclick="startScanner()">Start Scanning</button>
+    <div id="result">Scan result will appear here.</div>
+
+    <script>
+        // Check if the library loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("Html5Qrcode type:", typeof Html5Qrcode);
+        });
+
+        function startScanner() {
+            console.log("Start scanning triggered");
+            if (typeof Html5Qrcode === "undefined") {
+                console.error("Html5Qrcode is not defined. Ensure the library is loaded.");
+                return;
+            }
+
+            const html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "user" }, // Front camera
+                { fps: 10, qrbox: 250 }, // Scanner config
+                (decodedText) => {
+                    console.log("Scanned result:", decodedText);
+                    document.getElementById('result').textContent = `Scanned: ${decodedText}`;
+                }
+            ).catch((err) => {
+                console.error("Error starting scanner:", err);
+            });
+        }
+    </script>
+</body>
+</html>
