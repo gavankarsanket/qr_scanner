@@ -63,19 +63,23 @@
                 try {
                     if (isScanning) {
                         await html5QrCode.stop(); // Stop the current scanner
+                        isScanning = false;
                     }
 
+                    // Start the scanner with the selected camera mode
                     await html5QrCode.start(
                         { facingMode: { exact: cameraMode } },
                         { fps: 10, qrbox: 250 },
                         (decodedText) => {
                             document.getElementById("result").textContent = `Scanned: ${decodedText}`;
                             html5QrCode.stop();
+                            isScanning = false;
                         },
                         (errorMessage) => {
                             console.warn("QR Code scanning error:", errorMessage);
                         }
                     );
+
                     isScanning = true;
                 } catch (err) {
                     console.error("Error starting scanner:", err);
@@ -86,9 +90,11 @@
             startScanner(currentCamera);
 
             // Handle Switch Camera Button Click
-            document.getElementById("switch-camera").addEventListener("click", () => {
-                currentCamera = currentCamera === "environment" ? "user" : "environment"; // Toggle camera mode
-                startScanner(currentCamera); // Restart scanner with the new camera
+            document.getElementById("switch-camera").addEventListener("click", async () => {
+                // Toggle between "environment" (rear) and "user" (front) camera modes
+                currentCamera = currentCamera === "environment" ? "user" : "environment";
+                console.log(`Switching to ${currentCamera} camera`);
+                await startScanner(currentCamera); // Restart scanner with the new camera
             });
         });
     </script>
