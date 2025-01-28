@@ -34,30 +34,53 @@
     </style>
 </head>
 <body>
+    <select id="camera-select" style="margin-bottom: 20px;"></select>
     <div id="reader"></div>
     <div id="result">Scanning...</div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             const html5QrCode = new Html5Qrcode("reader");
+            const cameraSelect = document.getElementById("camera-select");
 
-            const qrCodeSuccessCallback = (decodedText) => {
-                document.getElementById("result").textContent = `Scanned: ${decodedText}`;
-                html5QrCode.stop().then(() => console.log("Scanner stopped"));
-            };
+            // Populate camera dropdown
+            const cameras = await Html5Qrcode.getCameras();
+            if (cameras && cameras.length) {
+                cameras.forEach((camera) => {
+                    const option = document.createElement("option");
+                    option.value = camera.id;
+                    option.text = camera.label || `Camera ${cameraSelect.length + 1}`;
+                    cameraSelect.appendChild(option);
+                });
 
-            const qrCodeErrorCallback = (errorMessage) => {
-                console.warn("QR Code scanning error:", errorMessage);
-            };
+                // Start with the first camera by default
+                startScanner(cameras[0].id);
+            } else {
+                document.getElementById("result").textContent = "No cameras found.";
+            }
 
-            html5QrCode.start(
-                { facingMode: "environment" }, // Rear camera by default
-                { fps: 10, qrbox: 250 },
-                qrCodeSuccessCallback,
-                qrCodeErrorCallback
-            ).catch((err) => {
-                console.error("Error starting scanner:", err);
+            cameraSelect.addEventListener("change", (event) => {
+                const cameraId = event.target.value;
+                html5QrCode.stop().then(() => {
+                    startScanner(cameraId);
+                });
             });
+
+            function startScanner(cameraId) {
+                html5QrCode.start(
+                    { deviceId: { exact: cameraId } },
+                    { fps: 10, qrbox: 250 },
+                    (decodedText) => {
+                        document.getElementById("result").textContent = `Scanned: ${decodedText}`;
+                        html5QrCode.stop().then(() => console.log("Scanner stopped"));
+                    },
+                    (errorMessage) => {
+                        console.warn("QR Code scanning error:", errorMessage);
+                    }
+                ).catch((err) => {
+                    console.error("Error starting scanner:", err);
+                });
+            }
         });
     </script>
 </body>
