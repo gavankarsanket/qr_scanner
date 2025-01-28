@@ -34,41 +34,29 @@
     </style>
 </head>
 <body>
-    <h1>QR Code Scanner</h1>
     <div id="reader"></div>
-    <div id="result">Scan result will appear here.</div>
+    <div id="result">Scanning...</div>
 
     <script>
-        // Initialize scanner
         document.addEventListener("DOMContentLoaded", () => {
             const html5QrCode = new Html5Qrcode("reader");
 
             const qrCodeSuccessCallback = (decodedText) => {
-                console.log("Decoded Text:", decodedText);
                 document.getElementById("result").textContent = `Scanned: ${decodedText}`;
-
-                // Stop scanning after successful scan
-                html5QrCode.stop().then(() => {
-                    console.log("Scanner stopped");
-                }).catch((err) => {
-                    console.error("Error stopping scanner:", err);
-                });
+                html5QrCode.stop().then(() => console.log("Scanner stopped"));
             };
 
             const qrCodeErrorCallback = (errorMessage) => {
-                // Ignore errors for now
                 console.warn("QR Code scanning error:", errorMessage);
             };
 
-            // Start scanning automatically when the page loads
             html5QrCode.start(
-                { facingMode: "environment" }, // Use rear camera by default
-                { fps: 10, qrbox: 250 },       // Frame per second & QR code box size
+                { facingMode: "environment" }, // Rear camera by default
+                { fps: 10, qrbox: 250 },
                 qrCodeSuccessCallback,
                 qrCodeErrorCallback
             ).catch((err) => {
                 console.error("Error starting scanner:", err);
-                document.getElementById("result").textContent = "Error accessing the camera.";
             });
         });
     </script>
