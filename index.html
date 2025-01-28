@@ -31,56 +31,65 @@
             font-weight: bold;
             color: #333;
         }
+
+        #switch-camera {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #switch-camera:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
-    <select id="camera-select" style="margin-bottom: 20px;"></select>
     <div id="reader"></div>
     <div id="result">Scanning...</div>
+    <button id="switch-camera">Switch Camera</button>
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             const html5QrCode = new Html5Qrcode("reader");
-            const cameraSelect = document.getElementById("camera-select");
+            let currentCamera = "environment"; // Default to rear camera
+            let isScanning = false;
 
-            // Populate camera dropdown
-            const cameras = await Html5Qrcode.getCameras();
-            if (cameras && cameras.length) {
-                cameras.forEach((camera) => {
-                    const option = document.createElement("option");
-                    option.value = camera.id;
-                    option.text = camera.label || `Camera ${cameraSelect.length + 1}`;
-                    cameraSelect.appendChild(option);
-                });
-
-                // Start with the first camera by default
-                startScanner(cameras[0].id);
-            } else {
-                document.getElementById("result").textContent = "No cameras found.";
-            }
-
-            cameraSelect.addEventListener("change", (event) => {
-                const cameraId = event.target.value;
-                html5QrCode.stop().then(() => {
-                    startScanner(cameraId);
-                });
-            });
-
-            function startScanner(cameraId) {
-                html5QrCode.start(
-                    { deviceId: { exact: cameraId } },
-                    { fps: 10, qrbox: 250 },
-                    (decodedText) => {
-                        document.getElementById("result").textContent = `Scanned: ${decodedText}`;
-                        html5QrCode.stop().then(() => console.log("Scanner stopped"));
-                    },
-                    (errorMessage) => {
-                        console.warn("QR Code scanning error:", errorMessage);
+            async function startScanner(cameraMode) {
+                try {
+                    if (isScanning) {
+                        await html5QrCode.stop(); // Stop the current scanner
                     }
-                ).catch((err) => {
+
+                    await html5QrCode.start(
+                        { facingMode: { exact: cameraMode } },
+                        { fps: 10, qrbox: 250 },
+                        (decodedText) => {
+                            document.getElementById("result").textContent = `Scanned: ${decodedText}`;
+                            html5QrCode.stop();
+                        },
+                        (errorMessage) => {
+                            console.warn("QR Code scanning error:", errorMessage);
+                        }
+                    );
+                    isScanning = true;
+                } catch (err) {
                     console.error("Error starting scanner:", err);
-                });
+                }
             }
+
+            // Start with the rear camera
+            startScanner(currentCamera);
+
+            // Handle Switch Camera Button Click
+            document.getElementById("switch-camera").addEventListener("click", () => {
+                currentCamera = currentCamera === "environment" ? "user" : "environment"; // Toggle camera mode
+                startScanner(currentCamera); // Restart scanner with the new camera
+            });
         });
     </script>
 </body>
